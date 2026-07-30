@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OjaFlow</title>
+<style>
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #0B5A54;
+    --primary-soft: #E6F2F1;
+    --white: #FFFFFF;
+    --bg: #F8FAFC;
+    --accent: #F59E0B;
+    --accent-soft: #FEF3E2;
+    --success: #16A34A;
+    --success-soft: #E9F9EF;
+    --danger: #DC2626;
+    --danger-soft: #FDECEC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+  }
+  button:focus { outline: none; }
+  button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+
+  .icon svg { display: block; }
+
+  .card-shadow { box-shadow: 0 1px 3px rgba(15,23,42,0.08); }
+
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .btn-press {
+    transition: transform 0.15s ease;
+  }
+  .btn-press:active { transform: scale(0.95); }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .spin { animation: spin 0.9s linear infinite; }
+
+  /* ---------- Splash ---------- */
+  #splash-screen {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--primary);
+  }
+  .splash-inner {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .splash-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24px;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+    background: rgba(255,255,255,0.15);
+  }
+  .splash-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px 0;
+    color: var(--white);
+  }
+  .splash-sub {
+    font-size: 14px;
+    margin: 0 0 56px 0;
+    color: rgba(255,255,255,0.85);
+    padding: 0 8px;
+  }
+  .splash-btn {
+    width: 100%;
+    border-radius: 999px;
+    padding: 14px 0;
+    font-weight: 600;
+    font-size: 14px;
+    background: var(--white);
+    color: var(--primary);
+  }
+  .splash-note {
+    font-size: 12px;
+    margin-top: 24px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* ---------- Shell / layout ---------- */
+  #app-shell {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+  #sidebar {
+    display: none;
+    flex-direction: column;
+    width: 224px;
+    flex-shrink: 0;
+    border-right: 1px solid #EEF2F6;
+    padding: 24px 16px;
+    gap: 4px;
+    background: var(--white);
+  }
+  @media (min-width: 768px) {
+    #sidebar { display: flex; }
+    #bottom-nav { display: none !important; }
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    margin-bottom: 24px;
+  }
+  .sidebar-brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    background: var(--primary-soft);
+  }
+  .sidebar-brand-text {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .side-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 12px;
+    padding: 10px 12px;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.15s ease;
+  }
+  .side-nav-item.active { background: var(--primary-soft); }
+  .side-nav-item span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .side-nav-item.active span { color: var(--primary); }
+
+  #content-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+  #main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+  }
+  @media (min-width: 768px) {
+    #main-content { padding-bottom: 32px; }
+  }
+
+  #bottom-nav {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid #EEF2F6;
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+  }
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    padding: 8px 0;
+    min-width: 0;
+  }
+  .bottom-nav-item span {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bottom-nav-item.active span { color: var(--primary); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 16px 16px 16px;
+  }
+  @media (min-width: 640px) { .topbar { padding-left: 24px; padding-right: 24px; } }
+  @media (min-width: 1024px) { .topbar { padding-left: 32px; padding-right: 32px; } }
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: var(--white);
+  }
+  @media (min-width: 768px) { .back-btn { display: none; } }
+  .topbar h1 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .page-px {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  @media (min-width: 640px) { .page-px { padding-left: 24px; padding-right: 24px; } }
+  @media (min-width: 1024px) { .page-px { padding-left: 32px; padding-right: 32px; } }
+
+  /* ---------- Stat cards ---------- */
+  .stat-card {
+    border-radius: 16px;
+    padding: 14px;
+    width: 100%;
+    min-width: 0;
+    background: var(--white);
+  }
+  @media (min-width: 640px) { .stat-card { padding: 16px; } }
+  .stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+    color: var(--text-secondary);
+  }
+  .stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+  @media (min-width: 640px) { .stat-value { font-size: 20px; } }
+  .stat-sub {
+    font-size: 12px;
+    margin: 2px 0 0 0;
+    color: var(--text-secondary);
+  }
+
+  .grid-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 640px) { .grid-stats { grid-template-columns: repeat(2, 1fr); } }
+  .grid-stats-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 640px) { .grid-stats-3 { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ---------- Big buttons ---------- */
+  .big-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (min-width: 640px) { .big-btn-grid { grid-template-columns: repeat(4, 1fr); } }
+  .big-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    border-radius: 16px;
+    padding: 12px;
+    height: 80px;
+    width: 100%;
+    min-width: 0;
+    background: var(--white);
+  }
+  @media (min-width: 640px) { .big-btn { height: 96px; padding: 16px; } }
+  .big-btn-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  @media (min-width: 640px) { .big-btn-icon-wrap { width: 36px; height: 36px; } }
+  .big-btn-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    line-height: 1.2;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (min-width: 640px) { .big-btn-label { font-size: 14px; } }
+
+  /* ---------- Tx rows ---------- */
+  .tx-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #EEF2F6;
+  }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .tx-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+  .tx-label { font-size: 14px; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tx-time { font-size: 12px; margin: 0; color: var(--text-secondary); }
+  .tx-amount { font-size: 14px; font-weight: 700; margin: 0; flex-shrink: 0; }
+
+  .tx-list-card {
+    border-radius: 16px;
+    padding: 0 16px;
+    background: var(--white);
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    background: rgba(15,23,42,0.45);
+  }
+  @media (min-width: 640px) {
+    .modal-overlay { align-items: center; padding: 16px; }
+  }
+  .modal-box {
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 20px 28px 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--white);
+  }
+  @media (min-width: 640px) {
+    .modal-box { max-width: 384px; border-radius: 24px; padding: 24px 24px 32px 24px; }
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .modal-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+  .modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+    color: var(--text-secondary);
+  }
+  .field input {
+    width: 100%;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--bg);
+    color: var(--text-primary);
+    border: 1px solid #E2E8F0;
+  }
+
+  .modal-actions { display: flex; gap: 12px; margin-top: 8px; }
+  .modal-actions button {
+    flex: 1;
+    border-radius: 12px;
+    padding: 12px 0;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .modal-cancel { background: var(--bg); color: var(--text-secondary); }
+  .modal-confirm { color: var(--white); }
+
+  .refresh-btn {
+    width: 100%;
+    border-radius: 12px;
+    padding: 12px 0;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .refresh-btn:disabled { opacity: 0.7; cursor: default; }
+
+  /* ---------- Dashboard header ---------- */
+  .dash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 16px 16px 16px;
+  }
+  @media (min-width: 640px) { .dash-header { padding-left: 24px; padding-right: 24px; } }
+  @media (min-width: 1024px) { .dash-header { padding-left: 32px; padding-right: 32px; } }
+  .dash-date { font-size: 12px; margin: 0; color: var(--text-secondary); }
+  .dash-greeting { font-size: 16px; font-weight: 700; margin: 2px 0 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (min-width: 640px) { .dash-greeting { font-size: 18px; } }
+  .dash-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    background: var(--white);
+    position: relative;
+  }
+  .icon-btn .dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+  .avatar-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    background: var(--primary);
+  }
+  @media (min-width: 640px) { .avatar-btn { display: flex; } }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 1024px) {
+    .dash-grid { grid-template-columns: 2fr 1fr; gap: 24px; }
+  }
+  .dash-col { display: flex; flex-direction: column; gap: 12px; }
+
+  .balance-card {
+    border-radius: 24px;
+    padding: 20px;
+    background: var(--primary);
+    box-shadow: 0 4px 14px rgba(15,118,110,0.25);
+  }
+  @media (min-width: 640px) { .balance-card { padding: 24px; } }
+  @media (min-width: 1024px) { .balance-card { padding: 32px; } }
+  .balance-label { font-size: 12px; font-weight: 500; margin: 0 0 8px 0; color: rgba(255,255,255,0.8); }
+  .balance-value { font-size: 30px; font-weight: 800; margin: 0; color: var(--white); word-break: break-word; }
+  @media (min-width: 640px) { .balance-value { font-size: 36px; } }
+  @media (min-width: 1024px) { .balance-value { font-size: 44px; } }
+
+  .summary-card {
+    border-radius: 16px;
+    padding: 20px;
+    background: var(--white);
+  }
+  .summary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .summary-head h3 { font-size: 14px; font-weight: 700; margin: 0; }
+  .summary-body { font-size: 14px; line-height: 1.6; margin: 0; color: var(--text-secondary); }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-head h3 { font-size: 14px; font-weight: 700; margin: 0; }
+  .see-all-btn {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    flex-shrink: 0;
+    gap: 2px;
+  }
+
+  .max-w-6xl { max-width: 1152px; margin-left: auto; margin-right: auto; }
+  .max-w-3xl { max-width: 768px; margin-left: auto; margin-right: auto; }
+  .max-w-md { max-width: 448px; margin-left: auto; margin-right: auto; }
+  @media (min-width: 768px) { .max-w-3xl-md-left, .max-w-md-md-left { margin-left: 0; } }
+
+  .wallet-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script>
+/* ------------------------------------------------------------------ */
+/* Icon library (minimal lucide-style inline SVGs)                     */
+/* ------------------------------------------------------------------ */
+const ICON_PATHS = {
+  wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/><path d="M3 8h17a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3a2 2 0 0 1 0-4h4"/>',
+  receipt: '<path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2z"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><path d="M16.5 4.5a3.5 3.5 0 0 1 0 7"/><path d="M15 14c3 0 5.5 2.5 6.5 6"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/>',
+  bell: '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10.5 20a1.7 1.7 0 0 0 3 0"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6.5 8-6.5s8 2.5 8 6.5"/>',
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
+  'list-checks': '<path d="m3.5 6 1.5 1.5L8 4.5"/><path d="m3.5 13 1.5 1.5L8 11.5"/><path d="m3.5 20 1.5 1.5L8 18.5"/><path d="M12 6h9M12 13h9M12 20h9"/>',
+  'bar-chart-3': '<path d="M4 4v16h16"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/>',
+  'arrow-down-left': '<path d="M18 6 6 18"/><path d="M18 18H6V6"/>',
+  'arrow-up-right': '<path d="M6 18 18 6"/><path d="M6 6h12v12"/>',
+  'chevron-right': '<path d="m9 5 7 7-7 7"/>',
+  'chevron-left': '<path d="m15 19-7-7 7-7"/>',
+  x: '<path d="M18 6 6 18"/><path d="M6 6l12 12"/>',
+  'shopping-bag': '<path d="M6 8h12l1 12H5z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+  'log-out': '<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M15 16l4-4-4-4"/><path d="M19 12H9"/>',
+  sparkles: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><path d="m6 6 2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/><circle cx="12" cy="12" r="2.2"/>',
+  'refresh-cw': '<path d="M21 12a9 9 0 0 1-15.3 6.5L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.5L21 8"/><path d="M3 16v4h4"/><path d="M21 8V4h-4"/>'
+};
+
+function icon(name, { size = 18, color = 'currentColor', strokeWidth = 2, className = '' } = {}) {
+  const inner = ICON_PATHS[name] || '';
+  return `<span class="icon ${className}" style="display:inline-flex;line-height:0;color:${color}"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg></span>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Colors                                                              */
+/* ------------------------------------------------------------------ */
+const C = {
+  primary: '#0F766E',
+  primaryDark: '#0B5A54',
+  primarySoft: '#E6F2F1',
+  white: '#FFFFFF',
+  bg: '#F8FAFC',
+  accent: '#F59E0B',
+  accentSoft: '#FEF3E2',
+  success: '#16A34A',
+  successSoft: '#E9F9EF',
+  danger: '#DC2626',
+  dangerSoft: '#FDECEC',
+  textPrimary: '#0F172A',
+  textSecondary: '#64748B',
+};
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+function naira(n) {
+  return `\u20A6${Math.round(n).toLocaleString('en-NG')}`;
+}
+function timeAgo(minsAgo) {
+  if (minsAgo < 60) return `${minsAgo}m ago`;
+  const h = Math.floor(minsAgo / 60);
+  return `${h}h ago`;
+}
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+const AI_TIPS = [
+  (p, d) => `Today's recorded sales exceeded expenses, for an estimated profit of ${naira(p)}. You have ${naira(d)} in outstanding customer debt - following up may improve your available cash flow.`,
+  (p, d) => `Nice work today - your profit of ${naira(p)} shows sales holding steady. Consider reminding customers about the ${naira(d)} still owed to keep cash flowing smoothly.`,
+  (p, d) => `Your business made an estimated ${naira(p)} profit today. With ${naira(d)} in pending debt, a quick follow-up call to customers could boost this week's cash on hand.`,
+];
+
+/* ------------------------------------------------------------------ */
+/* State                                                               */
+/* ------------------------------------------------------------------ */
+const state = {
+  screen: 'splash',
+  modal: null,
+  amountInput: '',
+  nameInput: '',
+  refreshing: false,
+  tipIndex: 0,
+  walletBalance: 10000,
+  cashSalesTotal: 0,
+  expensesTotal: 8500,
+  debts: [
+    { id: 1, name: 'Iya Kemi', amount: 2500 },
+    { id: 2, name: 'Baba Tunde', amount: 1500 },
+  ],
+  transactions: [
+    { id: 1, label: 'BMONI Wallet Balance', amount: 10000, minsAgo: 5 },
+    { id: 2, label: 'Transport', amount: -1000, minsAgo: 90 },
+  ],
+};
+
+function computed() {
+  const salesTotal = state.walletBalance + state.cashSalesTotal;
+  const profit = salesTotal - state.expensesTotal;
+  const debtTotal = state.debts.reduce((s, d) => s + d.amount, 0);
+  const tip = AI_TIPS[state.tipIndex % AI_TIPS.length](profit, debtTotal);
+  return { salesTotal, profit, debtTotal, tip };
+}
+
+/* ------------------------------------------------------------------ */
+/* Actions                                                              */
+/* ------------------------------------------------------------------ */
+function setScreen(screen) {
+  state.screen = screen;
+  render();
+}
+
+function openModal(key) {
+  state.amountInput = '';
+  state.nameInput = '';
+  state.modal = key;
+  render();
+}
+
+function closeModal() {
+  state.modal = null;
+  render();
+}
+
+function addTransaction(label, amount) {
+  state.transactions.unshift({ id: Date.now(), label, amount, minsAgo: 0 });
+}
+
+function handleRefreshBalance() {
+  state.refreshing = true;
+  render();
+  setTimeout(() => {
+    state.refreshing = false;
+    state.tipIndex += 1;
+    state.modal = null;
+    render();
+  }, 900);
+}
+
+function updateAmountInput(v) { state.amountInput = v; }
+function updateNameInput(v) { state.nameInput = v; }
+
+function submitModal() {
+  const amt = parseFloat(state.amountInput);
+  if (!amt || amt <= 0) return;
+  if (state.modal === 'sale') {
+    state.cashSalesTotal += amt;
+    addTransaction('Cash Sale', amt);
+  } else if (state.modal === 'expense') {
+    state.expensesTotal += amt;
+    addTransaction('Expense', -amt);
+  } else if (state.modal === 'debt') {
+    state.debts.push({ id: Date.now(), name: state.nameInput || 'Customer', amount: amt });
+  }
+  state.tipIndex += 1;
+  state.modal = null;
+  render();
+}
+
+/* ------------------------------------------------------------------ */
+/* Component renderers (return HTML strings)                           */
+/* ------------------------------------------------------------------ */
+function StatCard({ label, value, tone = 'neutral', sub }) {
+  const toneColor = tone === 'danger' ? C.danger : tone === 'success' ? C.success : C.textPrimary;
+  return `
+    <div class="stat-card card-shadow">
+      <p class="stat-label truncate">${escapeHtml(label)}</p>
+      <p class="stat-value truncate" style="color:${toneColor}">${escapeHtml(value)}</p>
+      ${sub ? `<p class="stat-sub truncate">${escapeHtml(sub)}</p>` : ''}
+    </div>`;
+}
+
+function BigButton({ iconName, label, color, action }) {
+  return `
+    <button class="big-btn card-shadow btn-press" data-action="${action}">
+      <div class="big-btn-icon-wrap" style="background:${color}1A">
+        ${icon(iconName, { size: 17, color, strokeWidth: 2.3 })}
+      </div>
+      <span class="big-btn-label">${escapeHtml(label)}</span>
+    </button>`;
+}
+
+function TxRow(tx) {
+  const positive = tx.amount >= 0;
+  return `
+    <div class="tx-row">
+      <div class="tx-left">
+        <div class="tx-icon-wrap" style="background:${positive ? C.successSoft : C.dangerSoft}">
+          ${positive ? icon('arrow-down-left', { size: 16, color: C.success, strokeWidth: 2.5 }) : icon('arrow-up-right', { size: 16, color: C.danger, strokeWidth: 2.5 })}
+        </div>
+        <div style="min-width:0">
+          <p class="tx-label">${escapeHtml(tx.label)}</p>
+          <p class="tx-time">${timeAgo(tx.minsAgo)}</p>
+        </div>
+      </div>
+      <p class="tx-amount" style="color:${positive ? C.success : C.danger}">${positive ? '+' : '-'}${naira(Math.abs(tx.amount))}</p>
+    </div>`;
+}
+
+function TopBar(title) {
+  return `
+    <div class="topbar">
+      <button class="back-btn card-shadow" data-action="go-dashboard">
+        ${icon('chevron-left', { size: 18, color: C.textPrimary })}
+      </button>
+      <h1 class="truncate">${escapeHtml(title)}</h1>
+    </div>`;
+}
+
+function SideNavItem({ iconName, label, key, active }) {
+  return `
+    <button class="side-nav-item ${active ? 'active' : ''}" data-action="go-${key}">
+      ${icon(iconName, { size: 19, color: active ? C.primary : C.textSecondary, strokeWidth: active ? 2.4 : 2 })}
+      <span class="truncate">${escapeHtml(label)}</span>
+    </button>`;
+}
+
+function BottomNavItem({ iconName, label, key, active }) {
+  return `
+    <button class="bottom-nav-item ${active ? 'active' : ''}" data-action="go-${key}">
+      ${icon(iconName, { size: 21, color: active ? C.primary : C.textSecondary, strokeWidth: active ? 2.5 : 2 })}
+      <span>${escapeHtml(label)}</span>
+    </button>`;
+}
+
+const NAV_ITEMS = [
+  { key: 'dashboard', iconName: 'home', label: 'Home' },
+  { key: 'transactions', iconName: 'list-checks', label: 'Transactions' },
+  { key: 'reports', iconName: 'bar-chart-3', label: 'Reports' },
+  { key: 'profile', iconName: 'user', label: 'Profile' },
+];
+
+function ShellOpen() {
+  return `
+    <div id="app-shell">
+      <aside id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">${icon('wallet', { size: 18, color: C.primary })}</div>
+          <span class="sidebar-brand-text">OjaFlow</span>
+        </div>
+        ${NAV_ITEMS.map(n => SideNavItem({ ...n, active: state.screen === n.key })).join('')}
+      </aside>
+      <div id="content-col">
+        <div id="main-content">`;
+}
+function ShellClose() {
+  return `
+        </div>
+        <nav id="bottom-nav">
+          ${NAV_ITEMS.map(n => BottomNavItem({ ...n, active: state.screen === n.key })).join('')}
+        </nav>
+      </div>
+    </div>`;
+}
+
+/* ---------------- Screens ---------------- */
+
+function renderSplash() {
+  return `
+    <div id="splash-screen">
+      <div class="splash-inner">
+        <div class="splash-icon-wrap">${icon('wallet', { size: 32, color: C.white, strokeWidth: 2 })}</div>
+        <h1 class="splash-title">OjaFlow</h1>
+        <p class="splash-sub">Your Smart Business Companion</p>
+        <button class="splash-btn btn-press" data-action="get-started">Get Started</button>
+        <p class="splash-note">Connected to BMONI sandbox &middot; Wallet balance &#8358;10,000 confirmed live</p>
+      </div>
+    </div>`;
+}
+
+function renderTransactions() {
+  return ShellOpen() + TopBar('Transactions') + `
+    <div class="page-px">
+      <div class="max-w-3xl tx-list-card card-shadow" style="margin-left:auto;margin-right:auto">
+        ${state.transactions.map(TxRow).join('')}
+      </div>
+    </div>` + ShellClose();
+}
+
+function renderReports() {
+  const { salesTotal, profit, debtTotal } = computed();
+  return ShellOpen() + TopBar('Reports') + `
+    <div class="page-px">
+      <div class="max-w-3xl grid-stats" style="margin-left:auto;margin-right:auto">
+        ${StatCard({ label: 'Total sales', value: naira(salesTotal) })}
+        ${StatCard({ label: 'Total expenses', value: naira(state.expensesTotal), tone: 'danger' })}
+        ${StatCard({ label: 'Net profit', value: naira(profit), tone: 'success' })}
+        ${StatCard({ label: 'Outstanding debt', value: naira(debtTotal), sub: `${state.debts.length} customers` })}
+      </div>
+    </div>` + ShellClose();
+}
+
+function renderProfile() {
+  return ShellOpen() + TopBar('Profile') + `
+    <div class="page-px">
+      <div class="max-w-md" style="margin-left:auto;margin-right:auto">
+        <div class="card-shadow" style="display:flex;align-items:center;gap:12px;border-radius:16px;padding:16px;margin-bottom:16px;background:${C.white}">
+          <div style="display:flex;align-items:center;justify-content:center;border-radius:999px;width:48px;height:48px;flex-shrink:0;background:${C.primarySoft}">
+            ${icon('user', { size: 22, color: C.primary })}
+          </div>
+          <div style="min-width:0">
+            <p style="font-size:14px;font-weight:700;margin:0" class="truncate">Mama Bisi</p>
+            <p style="font-size:12px;margin:2px 0 0 0;color:${C.textSecondary}" class="truncate">Merchant &middot; OjaFlow</p>
+          </div>
+        </div>
+        <div class="card-shadow" style="border-radius:16px;padding:16px;margin-bottom:16px;background:${C.white}">
+          <p style="font-size:12px;margin:0 0 4px 0;color:${C.textSecondary}">BMONI Wallet</p>
+          <p class="wallet-mono" style="margin:0;color:${C.textPrimary}">0xD2096e5e87713507c5Ab0CC7A8B924e27f48cB8C</p>
+        </div>
+        <button class="btn-press" data-action="logout" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:16px;padding:14px 0;font-weight:600;font-size:14px;background:${C.dangerSoft};color:${C.danger}">
+          ${icon('log-out', { size: 16 })} Log Out
+        </button>
+      </div>
+    </div>` + ShellClose();
+}
+
+function renderDashboard() {
+  const { salesTotal, profit, debtTotal, tip } = computed();
+  const dateStr = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+
+  return ShellOpen() + `
+    <div class="dash-header">
+      <div style="min-width:0">
+        <p class="dash-date truncate">${dateStr}</p>
+        <h1 class="dash-greeting">Good morning, Mama Bisi</h1>
+      </div>
+      <div class="dash-header-actions">
+        <button class="icon-btn card-shadow">${icon('globe', { size: 16, color: C.textSecondary })}</button>
+        <button class="icon-btn card-shadow">${icon('bell', { size: 16, color: C.textSecondary })}<span class="dot"></span></button>
+        <button class="avatar-btn" data-action="go-profile">${icon('user', { size: 16, color: C.white })}</button>
+      </div>
+    </div>
+
+    <div class="page-px">
+      <div class="max-w-6xl dash-grid" style="margin-left:auto;margin-right:auto">
+        <div class="dash-col">
+          <div class="balance-card">
+            <p class="balance-label">Wallet Balance (BMONI sandbox)</p>
+            <p class="balance-value">${naira(salesTotal)}</p>
+          </div>
+
+          <div class="grid-stats-3">
+            ${StatCard({ label: 'Expenses', value: naira(state.expensesTotal) })}
+            ${StatCard({ label: 'Estimated Profit', value: naira(profit), tone: 'success' })}
+            ${StatCard({ label: 'Customer Debts', value: naira(debtTotal), sub: `${state.debts.length} customers`, tone: 'danger' })}
+          </div>
+
+          <div class="big-btn-grid">
+            ${BigButton({ iconName: 'wallet', label: 'Receive Payment', color: C.primary, action: 'open-receive' })}
+            ${BigButton({ iconName: 'shopping-bag', label: 'Add Cash Sale', color: C.success, action: 'open-sale' })}
+            ${BigButton({ iconName: 'receipt', label: 'Record Expense', color: C.danger, action: 'open-expense' })}
+            ${BigButton({ iconName: 'users', label: 'Record Debt', color: C.accent, action: 'open-debt' })}
+          </div>
+        </div>
+
+        <div class="dash-col">
+          <div class="summary-card card-shadow">
+            <div class="summary-head">
+              ${icon('sparkles', { size: 16, color: C.accent })}
+              <h3>Business Summary</h3>
+            </div>
+            <p class="summary-body">${escapeHtml(tip)}</p>
+          </div>
+
+          <div>
+            <div class="section-head">
+              <h3>Recent Transactions</h3>
+              <button class="see-all-btn" data-action="go-transactions">See all ${icon('chevron-right', { size: 14, color: C.primary })}</button>
+            </div>
+            <div class="tx-list-card card-shadow">
+              ${state.transactions.slice(0, 4).map(TxRow).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>` + ShellClose();
+}
+
+/* ---------------- Modals ---------------- */
+
+function ModalWrap({ title, iconName, color, bodyHtml }) {
+  return `
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <div class="modal-icon-wrap" style="background:${color}1A">${icon(iconName, { size: 18, color, strokeWidth: 2.3 })}</div>
+            <h3>${escapeHtml(title)}</h3>
+          </div>
+          <button data-action="close-modal">${icon('x', { size: 20, color: C.textSecondary })}</button>
+        </div>
+        ${bodyHtml}
+      </div>
+    </div>`;
+}
+
+function ModalActionsHtml(color) {
+  return `
+    <div class="modal-actions">
+      <button class="modal-cancel" data-action="close-modal">Cancel</button>
+      <button class="modal-confirm btn-press" style="background:${color}" data-action="submit-modal">Confirm</button>
+    </div>`;
+}
+
+function renderModal() {
+  if (!state.modal) return '';
+
+  if (state.modal === 'receive') {
+    const body = `
+      <p style="font-size:14px;margin:0 0 20px 0;color:${C.textSecondary}">
+        Refreshes your real BMONI wallet balance. (In this in-chat demo it re-confirms the last known live value; the full app calls the live BMONI API directly.)
+      </p>
+      <button class="refresh-btn" style="background:${C.primary}" data-action="refresh-balance" ${state.refreshing ? 'disabled' : ''}>
+        ${icon('refresh-cw', { size: 16, color: C.white, className: state.refreshing ? 'spin' : '' })}
+        Refresh Balance
+      </button>`;
+    return ModalWrap({ title: 'Receive Payment', iconName: 'wallet', color: C.primary, bodyHtml: body });
+  }
+
+  if (state.modal === 'sale') {
+    const body = `
+      <div class="field">
+        <label>Amount</label>
+        <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(state.amountInput)}" data-input="amount" />
+      </div>
+      ${ModalActionsHtml(C.success)}`;
+    return ModalWrap({ title: 'Add Cash Sale', iconName: 'shopping-bag', color: C.success, bodyHtml: body });
+  }
+
+  if (state.modal === 'expense') {
+    const body = `
+      <div class="field">
+        <label>Amount</label>
+        <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(state.amountInput)}" data-input="amount" />
+      </div>
+      ${ModalActionsHtml(C.danger)}`;
+    return ModalWrap({ title: 'Record Expense', iconName: 'receipt', color: C.danger, bodyHtml: body });
+  }
+
+  if (state.modal === 'debt') {
+    const body = `
+      <div class="field">
+        <label>Customer name</label>
+        <input type="text" placeholder="e.g. Iya Kemi" value="${escapeHtml(state.nameInput)}" data-input="name" />
+      </div>
+      <div class="field">
+        <label>Amount</label>
+        <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(state.amountInput)}" data-input="amount" />
+      </div>
+      ${ModalActionsHtml(C.accent)}`;
+    return ModalWrap({ title: 'Record Debt', iconName: 'users', color: C.accent, bodyHtml: body });
+  }
+
+  return '';
+}
+
+/* ------------------------------------------------------------------ */
+/* Main render + event delegation                                      */
+/* ------------------------------------------------------------------ */
+function renderScreen() {
+  switch (state.screen) {
+    case 'splash': return renderSplash();
+    case 'transactions': return renderTransactions();
+    case 'reports': return renderReports();
+    case 'profile': return renderProfile();
+    case 'dashboard':
+    default: return renderDashboard();
+  }
+}
+
+// Preserve focus/caret position across re-renders while typing.
+function render() {
+  const root = document.getElementById('root');
+  const activeEl = document.activeElement;
+  const activeInputKey = activeEl && activeEl.dataset ? activeEl.dataset.input : null;
+  const selStart = activeEl && 'selectionStart' in activeEl ? activeEl.selectionStart : null;
+  const selEnd = activeEl && 'selectionEnd' in activeEl ? activeEl.selectionEnd : null;
+
+  root.innerHTML = renderScreen() + renderModal();
+
+  if (activeInputKey) {
+    const toRefocus = root.querySelector(`[data-input="${activeInputKey}"]`);
+    if (toRefocus) {
+      toRefocus.focus();
+      if (selStart !== null && selEnd !== null && toRefocus.setSelectionRange) {
+        try { toRefocus.setSelectionRange(selStart, selEnd); } catch (e) {}
+      }
+    }
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const actionEl = e.target.closest('[data-action]');
+  if (!actionEl) return;
+  const action = actionEl.dataset.action;
+
+  if (action === 'get-started') return setScreen('dashboard');
+  if (action.startsWith('go-')) return setScreen(action.replace('go-', ''));
+  if (action === 'logout') return setScreen('splash');
+
+  if (action === 'open-receive') return openModal('receive');
+  if (action === 'open-sale') return openModal('sale');
+  if (action === 'open-expense') return openModal('expense');
+  if (action === 'open-debt') return openModal('debt');
+
+  if (action === 'close-modal') return closeModal();
+  if (action === 'submit-modal') return submitModal();
+  if (action === 'refresh-balance') return handleRefreshBalance();
+});
+
+// Close modal when clicking the overlay itself (not its content).
+document.addEventListener('mousedown', (e) => {
+  if (e.target && e.target.id === 'modal-overlay') {
+    closeModal();
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const key = e.target.dataset ? e.target.dataset.input : null;
+  if (!key) return;
+  if (key === 'amount') state.amountInput = e.target.value;
+  if (key === 'name') state.nameInput = e.target.value;
+  // Note: no full render() here to avoid stealing focus; values are read on submit.
+});
+
+render();
+</script>
+</body>
+</html>
